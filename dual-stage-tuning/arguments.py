@@ -83,6 +83,10 @@ class DataTrainingArguments:
         default=None,
         metadata={"help": "The name of the column in the datasets containing the summaries (for summarization)."},
     )
+    input_column: Optional[str] = field(
+        default=None,
+        metadata={"help": "The name of the optional extra input column appended after the instruction."},
+    )
     history_column: Optional[str] = field(
         default=None,
         metadata={"help": "The name of the column in the datasets containing the history of chat."},

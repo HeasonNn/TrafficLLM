@@ -1,0 +1,13 @@
+{
+  "model_path": "models/chatglm2/chatglm2-6b",
+  "peft_path": "models/chatglm2/peft",
+  "peft_set": {
+    "UAD": "uad-balanced-v1/checkpoint-8000"
+  },
+  "task_name": "UAD",
+  "uad_peft_key": "UAD",
+  "allowed_outputs": ["normal", "abnormal"],
+  "output_mode": "binary",
+  "gpu": 7,
+  "load_in_8bit": true
+}

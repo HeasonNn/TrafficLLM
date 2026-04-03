@@ -23,6 +23,10 @@ import os
 import sys
 import json
 
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
 import numpy as np
 from datasets import load_dataset
 import jieba 
@@ -43,11 +47,12 @@ from transformers import (
 from trainer_seq2seq import Seq2SeqTrainer
 
 from arguments import ModelArguments, DataTrainingArguments
+from scripts.uad_train_utils import format_training_query
 
 logger = logging.getLogger(__name__)
 
 # ptuning should mask this line
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
 # os.environ["CUDA_VISIBLE_DEVICES"] = "2,3,4"
 
 def main():
@@ -104,7 +109,7 @@ def main():
         extension,
         data_files=data_files,
         cache_dir=model_args.cache_dir,
-        use_auth_token=True if model_args.use_auth_token else None,
+        # use_auth_token=True if model_args.use_auth_token else None,
     )
 
     # Load pretrained model and tokenizer
@@ -156,6 +161,7 @@ def main():
     prompt_column = data_args.prompt_column
     response_column = data_args.response_column
     history_column = data_args.history_column
+    input_column = data_args.input_column
     
     # Temporarily set max_target_length for training.
     max_target_length = data_args.max_target_length
@@ -165,8 +171,9 @@ def main():
         for i in range(len(examples[prompt_column])):
             if examples[prompt_column][i] and examples[response_column][i]:
                 query = examples[prompt_column][i]
+                input_text = examples[input_column][i] if input_column is not None else None
                 history = examples[history_column][i] if history_column is not None else None
-                prompt = tokenizer.build_prompt(query, history)
+                prompt = tokenizer.build_prompt(format_training_query(query, input_text), history)
                 inputs.append(prompt)
                 targets.append(examples[response_column][i])
 
@@ -192,9 +199,10 @@ def main():
         for i in range(len(examples[prompt_column])):
             if examples[prompt_column][i] and examples[response_column][i]:
                 query, answer = examples[prompt_column][i], examples[response_column][i]
+                input_text = examples[input_column][i] if input_column is not None else None
 
                 history = examples[history_column][i] if history_column is not None else None
-                prompt = tokenizer.build_prompt(query, history)
+                prompt = tokenizer.build_prompt(format_training_query(query, input_text), history)
 
                 prompt = prefix + prompt
                 a_ids = tokenizer.encode(text=prompt, add_special_tokens=True, truncation=True,
